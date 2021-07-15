@@ -1,35 +1,31 @@
 ---
-  - name: Upload tar.gz Java from local folder
-    copy:
-      src: "jdk-{{ java_version }}_linux-x64_bin.tar.gz"
-      dest: "/tmp/jdk-{{ java_version }}_linux-x64_bin.tar.gz"
-      mode: 0755
-    register: get_java
-    until: get_java is succeeded
-    tags: java
-  - name: Create directrory for Java
-    file:
-      state: directory
-      path: "{{ java_home }}"
-    tags: java
-  - name: Extract Java in the installation directory
-    become: true
-    unarchive:
-      copy: false
-      src: "/tmp/jdk-{{ java_version }}_linux-x64_bin.tar.gz"
-      dest: "{{ java_home }}"
-      extra_opts: [--strip-components=1]
-      creates: "{{ java_home }}/bin/java"
-    tags: java_unarchive
-  - name: Set environment java
-    become: yes
-    template:
-      src: templates/java.sh.j2
-      dest: /etc/profile.d/java.sh
-      mode: 777
-  - name: Install on ubuntu only
-    apt:
-    become: true
-    when: ansible_os_family == 'Ubuntu'
-    with_items:
-        - openjdk-8-jre
+    - name: Get distr
+      when: ansible_os_family == "Debian"
+      get_url:
+         url: "https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-7.13.3-amd64.deb"
+         dest: "/tmp/elastic.deb"
+         mode: 755
+         timeout: 60
+         force: true
+      register: get_elastic
+      until: get_elastic is succeeded
+      tags: cool
+    - name: Install
+      when: ansible_os_family == "Debian"
+      become: true
+      shell: dpkg -i /tmp/elastic.deb
+    - name: Get distr for centos
+      when: ansible_os_family == "RedHat"
+      get_url:
+         url: "https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-7.13.3-x86_64.rpm"
+         dest: "/tmp/elastic.rpm"
+         mode: 755
+         timeout: 60
+         force: true
+      register: get_elastic
+      until: get_elastic is succeeded
+      tags: cool
+    - name: Install
+      when: ansible_os_family == "RedHat"
+      become: true
+      shell: rpm -i /tmp/elastic.rpm
