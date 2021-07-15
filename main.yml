@@ -1,0 +1,31 @@
+---
+    - name: Get distr
+      when: ansible_os_family == "Debian"
+      get_url:
+         url: "https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-7.13.3-amd64.deb"
+         dest: "/tmp/elastic.deb"
+         mode: 755
+         timeout: 60
+         force: true
+      register: get_elastic
+      until: get_elastic is succeeded
+      tags: cool
+    - name: Install
+      when: ansible_os_family == "Debian"
+      become: true
+      shell: dpkg -i /tmp/elastic.deb
+    - name: Get distr for centos
+      when: ansible_os_family == "RedHat"
+      get_url:
+         url: "https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-7.13.3-x86_64.rpm"
+         dest: "/tmp/elastic.rpm"
+         mode: 755
+         timeout: 60
+         force: true
+      register: get_elastic
+      until: get_elastic is succeeded
+      tags: cool
+    - name: Install
+      when: ansible_os_family == "RedHat"
+      become: true
+      shell: rpm -i /tmp/elastic.rpm
